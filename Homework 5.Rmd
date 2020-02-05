@@ -1,0 +1,112 @@
+---
+title: "Homework 5"
+output: html_notebook
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+Bball = read.csv("C:/Users/blake/Desktop/MSDS/MSDS_6306_Doing-Data-Science-Master/Unit 2/PlayersBBall.csv", header = TRUE)
+head(Bball)
+```
+
+```{r}
+library(tidyr)
+Bball_clean <- Bball %>% separate(height,into = c("ft", "inch"), sep = "-")
+Bball_clean$ft <- as.integer(as.character(Bball_clean$ft))
+Bball_clean$inch <- as.integer(as.character(Bball_clean$inch))
+Bball_clean$TotalInches <- as.integer(Bball_clean[,5]*12+Bball_clean[,6])
+head(Bball_clean)
+```
+```{r}
+ggplot(Bball_clean, aes(x=TotalInches, fill= position)) + geom_histogram() + facet_wrap(~position)
+```
+
+```{r}
+fifa = read.csv("C:/Users/blake/Desktop/MSDS/MSDS_6306_Doing-Data-Science-Master/Unit 3/FIFA Players.csv", header = TRUE)
+fifaclean <- fifa %>% separate(Height,into = c("ft", "inch"), sep = "'")
+fifaclean <- fifaclean %>% separate(Weight,into = c("Weightn", "lbs"), sep = "l")
+fifa$ft <- as.integer(as.character(fifaclean$ft))
+fifa$Weightn <- as.integer(as.character(fifaclean$Weightn))
+fifa$inch <- as.integer(as.character(fifaclean$inch))
+fifa$TotalInches <- as.integer(fifa$ft*12+fifa$inch)
+head(fifa)
+```
+```{r}
+fifa %>%
+ggplot(aes(x = Weightn, y = TotalInches)) + 
+geom_point(aes(color = Position))
+
+
+fifa %>% ggplot(aes(x = Weightn, y = TotalInches, color = Position)) + geom_point() + facet_wrap(~Position)+ ggtitle("Weight v. Height in Inches v. Position")
+```
+```{r}
+FIFAPlayer <- fifa %>% filter(Position == "LB" | Position == "LM" )
+
+FIFAPlayer %>%
+ggplot(aes(x = Weightn, y = TotalInches)) + 
+geom_point(aes(color = Position)) + 
+facet_grid(rows = vars(Position))
+```
+
+```{r}
+library(dplyr)
+yob2016 <- read.table(("C:/Users/blake/Desktop/MSDS/MSDS_6306_Doing-Data-Science-Master/Unit 5/yob2016.txt"), sep =";", header = FALSE)
+yob2016 <- rename(yob2016, Name=V1, Gender=V2 , TimesUsed=V3)
+colnames(yob2016)
+
+
+yob2016
+```
+
+```{r}
+library(stringr)
+yobyyy<- yob2016 %>%
+ select(Name) %>%   
+ filter(str_detect(Name, "yyy"))
+yobyyy
+```
+
+```{r}
+yobclean <-yob2016[!(yob2016$Name=="Fionayyy"),]
+yobclean
+```
+
+```{r}
+yob2015 <- read.table(("C:/Users/blake/Desktop/MSDS/MSDS_6306_Doing-Data-Science-Master/Unit 5/yob2015.txt"), sep =",", header = FALSE)
+yob2015 <- rename(yob2015, Name=V1, Gender=V2 , TimesUsed=V3)
+colnames(yob2015)
+
+tail(yob2015)
+```
+
+```{r}
+final <- merge(yob2016,yob2015, by = "Name",all = FALSE)
+final$Total <- as.integer(final$TimesUsed.x+final$TimesUsed.y)
+final
+```
+```{r}
+library(plyr)
+final<-arrange(final,desc(Total))
+final
+```
+```{r}
+FinalF <- filter(final, Gender.x == "F")
+FinalF <- FinalF[c("Name","Total")]
+
+
+
+FinalF <- FinalF %>% top_n(10)
+FinalF
+```
+
+```{r}
+write.csv(FinalF,"C:/Users/blake/Desktop/MSDS/Final.csv", row.names = FALSE)
+```
+
+```{r}
+FinalF %>% ggplot(aes(x = Name, y = Total)) + geom_bar(stat = "identity") + ggtitle("Top 10 Names for Females")
+```
+
